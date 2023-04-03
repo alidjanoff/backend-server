@@ -1,9 +1,12 @@
 // Import Express
 const express = require("express");
 // Import Data
-const data = require("./data.js");
+let data = require("./data.js");
 // Create server
 const server = express();
+
+// Converting body data to json for all request methodts.
+server.use(express.json());
 
 // Get method
 server.get("/", (req, res) => {
@@ -13,6 +16,47 @@ server.get("/", (req, res) => {
 // Get users
 server.get("/users", (req, res) => {
   res.status(200).json(data);
+});
+
+let next_id = 5;
+
+// Post user
+server.post("/users", (req, res) => {
+  let newUser = req.body;
+  newUser.id = next_id;
+  next_id++;
+  data.push(newUser);
+  res.status(201).json(newUser);
+});
+
+// Delete user
+server.delete("/users/:id", (req, res) => {
+  const userID = req.params.id;
+  const deletedUser = data.find((user) => user.id === Number(userID));
+  if (deletedUser) {
+    data = data.filter((user) => user.id !== Number(userID));
+    res.status(204).end();
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
+
+// Edit user
+server.put("/users/:id", (req, res) => {
+  const userID = req.params.id;
+  const currentUser = req.body;
+  const editedUserIndex = data.findIndex((user) => user.id === Number(userID));
+  if (editedUserIndex !== -1) {
+    data[editedUserIndex] = {
+      id: Number(userID),
+      name: currentUser.name,
+      surname: currentUser.surname,
+      specialty: currentUser.specialty,
+    };
+    res.status(200).json(data);
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
 });
 
 // Get user for id
