@@ -10,12 +10,19 @@ router.get("/", (req, res) => {
 let next_id = 5;
 
 // Post user
-router.post("/", (req, res) => {
+router.post("/", (req, res, next) => {
   let newUser = req.body;
-  newUser.id = next_id;
-  next_id++;
-  data.push(newUser);
-  res.status(201).json(newUser);
+
+  if (!newUser.name) {
+    next({ statusCode: 400, message: "Name is required" });
+  } else if (newUser.name && !newUser.surname) {
+    next({ statusCode: 400, message: "Surname is required" });
+  } else {
+    newUser.id = next_id;
+    next_id++;
+    data.push(newUser);
+    res.status(201).json(newUser);
+  }
 });
 
 // Delete user
