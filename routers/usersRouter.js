@@ -1,10 +1,10 @@
 const router = require("express").Router();
 
-let data = require("../data.js");
+let users = require("../database/users.js");
 
 // Get users
 router.get("/", (req, res) => {
-  res.status(200).json(data);
+  res.status(200).json(users);
 });
 
 let next_id = 5;
@@ -20,7 +20,7 @@ router.post("/", (req, res, next) => {
   } else {
     newUser.id = next_id;
     next_id++;
-    data.push(newUser);
+    users.push(newUser);
     res.status(201).json(newUser);
   }
 });
@@ -28,9 +28,9 @@ router.post("/", (req, res, next) => {
 // Delete user
 router.delete("/:id", (req, res) => {
   const userID = req.params.id;
-  const deletedUser = data.find((user) => user.id === Number(userID));
+  const deletedUser = users.find((user) => user.id === Number(userID));
   if (deletedUser) {
-    data = data.filter((user) => user.id !== Number(userID));
+    users = users.filter((user) => user.id !== Number(userID));
     res.status(204).end();
   } else {
     res.status(404).json({ message: "User not found" });
@@ -41,15 +41,15 @@ router.delete("/:id", (req, res) => {
 router.put("/:id", (req, res) => {
   const userID = req.params.id;
   const currentUser = req.body;
-  const editedUserIndex = data.findIndex((user) => user.id === Number(userID));
+  const editedUserIndex = users.findIndex((user) => user.id === Number(userID));
   if (editedUserIndex !== -1) {
-    data[editedUserIndex] = {
+    users[editedUserIndex] = {
       id: Number(userID),
       name: currentUser.name,
       surname: currentUser.surname,
       specialty: currentUser.specialty,
     };
-    res.status(200).json(data);
+    res.status(200).json(users);
   } else {
     res.status(404).json({ message: "User not found" });
   }
@@ -58,7 +58,7 @@ router.put("/:id", (req, res) => {
 // Get user for id
 router.get("/:id", (req, res) => {
   const { id } = req.params;
-  const user = data.find((user) => user.id === Number(id));
+  const user = users.find((user) => user.id === Number(id));
   if (user) {
     res.status(200).json(user);
   } else {
