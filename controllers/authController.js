@@ -265,7 +265,6 @@
 //   sendDeleteAccountOTP,
 // };
 
-
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
@@ -281,7 +280,10 @@ const storage = multer.diskStorage({
     cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
+    cb(
+      null,
+      file.fieldname + "-" + Date.now() + path.extname(file.originalname)
+    );
   },
 });
 
@@ -293,7 +295,13 @@ const registerUser = async (req, res) => {
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   try {
-    const newUser = new User({ name, surname, email, password: hashedPassword, role: "user" });
+    const newUser = new User({
+      name,
+      surname,
+      email,
+      password: hashedPassword,
+      role: "user",
+    });
     await newUser.save();
     res.send("User is created");
   } catch (error) {
@@ -311,7 +319,11 @@ const loginUser = async (req, res) => {
       return res.status(401).send("Invalid email or password");
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1w" });
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1w" }
+    );
     res.send({ token });
   } catch (error) {
     res.status(500).send("Error logging in: " + error.message);
@@ -326,7 +338,11 @@ const sendOTP = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).send("User not found");
 
-    const otp = otpGenerator.generate(6, { alphabets: false, upperCase: false, specialChars: false });
+    const otp = otpGenerator.generate(6, {
+      alphabets: false,
+      upperCase: false,
+      specialChars: false,
+    });
     user.otp = otp;
     await user.save();
 
@@ -363,8 +379,126 @@ const sendOTPToEmail = (email, otp) => {
   });
 };
 
+// Profil resmini güncelleme
+const changeProfileImage = async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+
+  if (!token) return res.status(403).send("No token provided");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("User not found");
+
+    upload(req, res, async (err) => {
+      if (err)
+        return res.status(400).send("Error uploading file: " + err.message);
+
+      user.profileImage = req.file.path;
+      await user.save();
+
+      res.send({
+        message: "Profile image updated successfully",
+        profileImage: user.profileImage,
+      });
+    });
+  } catch (error) {
+    res.status(500).send("Error updating profile image: " + error.message);
+  }
+};
+
+// Şifre değiştirme
+const changePassword = async (req, res) => {
+  const { oldPassword, newPassword, email, otp } = req.body;
+  const token = req.headers.authorization;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.userId);
+      if (!user) return res.status(404).send("User not found");
+
+      if (!bcrypt.compareSync(oldPassword, user.password)) {
+        return res.status(401).send("Old password is incorrect");
+      }
+
+      user.password = bcrypt.hashSync(newPassword, 10);
+      await user.save();
+      res.send("Password has been successfully changed");
+    } catch (error) {
+      res.status(500).send("Error changing password: " + error.message);
+    }
+  } else if (email && otp) {
+    try {
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).send("User not found");
+
+      if (user.otp !== otp) return res.status(401).send("Invalid OTP");
+
+      user.password = bcrypt.hashSync(newPassword, 10);
+      user.otp = null;
+      await user.save();
+
+      res.send("Password has been successfully changed");
+    } catch (error) {
+      res.status(500).send("Error changing password: " + error.message);
+    }
+  } else {
+    res.status(400).send("Invalid request data");
+  }
+};
+
+// Hesap silme işlemi
+const deleteUserAccount = async (req, res) => {
+  const { otp } = req.body;
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("No token provided");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("User not found");
+
+    if (user.otp !== otp) return res.status(401).send("Invalid OTP");
+
+    await User.findByIdAndDelete(user._id);
+
+    res.send("User account has been successfully deleted");
+  } catch (error) {
+    res.status(500).send("Error deleting account: " + error.message);
+  }
+};
+
+// Şifre sıfırlama OTP gönderme
+const sendResetPasswordOTP = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send("User not found");
+
+    const otp = otpGenerator.generate(6, {
+      alphabets: false,
+      upperCase: false,
+      specialChars: false,
+    });
+    user.otp = otp;
+    await user.save();
+
+    sendOTPToEmail(email, otp);
+    res.send("OTP sent to email for password reset");
+  } catch (error) {
+    res.status(500).send("Error sending OTP: " + error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   sendOTP,
+  changeProfileImage,
+  changePassword,
+  sendResetPasswordOTP,
+  deleteUserAccount,
 };

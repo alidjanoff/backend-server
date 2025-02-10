@@ -160,7 +160,6 @@
 //   deleteProduct,
 // };
 
-
 const multer = require("multer");
 const Product = require("../models/product");
 const jwt = require("jsonwebtoken");
@@ -211,13 +210,41 @@ const addProduct = async (req, res) => {
         name,
         details,
         price,
-        productImage: req.file ? req.file.path : null
+        productImage: req.file ? req.file.path : null,
       });
 
       await newProduct.save();
       res.send(newProduct);
     } catch (error) {
       res.status(500).send("Error adding product: " + error.message);
+    }
+  });
+};
+
+// Update an existing product (admin only)
+const updateProduct = async (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) return res.status(400).send({ message: err.message });
+
+    try {
+      const { name, details, price } = req.body;
+      const product = await Product.findById(req.params.id);
+      if (!product) return res.status(404).send("Product not found");
+
+      // Güncellenen ürün bilgilerini ayarlıyoruz
+      product.name = name || product.name;
+      product.details = details || product.details;
+      product.price = price || product.price;
+
+      // Eğer yeni bir dosya yüklenmişse, eski görseli güncelliyoruz
+      if (req.file) {
+        product.productImage = req.file.path;
+      }
+
+      await product.save();
+      res.send(product);
+    } catch (error) {
+      res.status(500).send("Error updating product: " + error.message);
     }
   });
 };
@@ -236,5 +263,6 @@ module.exports = {
   getProducts,
   getProductById,
   addProduct,
+  updateProduct, // ✅ EKLENEN DOĞRU FONKSİYON
   deleteProduct,
 };
