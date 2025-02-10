@@ -4,14 +4,15 @@
 // const jwt = require("jsonwebtoken");
 
 // Helper function to check if the user is an admin
-const isAdmin = (token) => {
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    return decoded.role === "admin"; // Check if the user has 'admin' role
-  } catch (err) {
-    return false; // If token is invalid or user is not admin, return false
-  }
-};
+// const isAdmin = (token) => {
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     console.log("decoded", decoded);
+//     return decoded.role === "admin"; // Check if the user has 'admin' role
+//   } catch (err) {
+//     return false; // If token is invalid or user is not admin, return false
+//   }
+// };
 
 // // Multer configuration for file uploads
 // const storage = multer.diskStorage({
@@ -164,6 +165,16 @@ const multer = require("multer");
 const Product = require("../models/product");
 const jwt = require("jsonwebtoken");
 
+const isAdmin = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded", decoded);
+    return decoded.role === "admin"; // Check if the user has 'admin' role
+  } catch (err) {
+    return false; // If token is invalid or user is not admin, return false
+  }
+};
+
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -200,6 +211,15 @@ const getProductById = async (req, res) => {
 
 // Add a new product (admin only)
 const addProduct = async (req, res) => {
+  const token = req.headers["authorization"];
+  const userIsAdmin = isAdmin(token);
+
+  if (!userIsAdmin) {
+    return res
+      .status(403)
+      .send("You are not authorized to perform this action");
+  }
+
   upload(req, res, async (err) => {
     if (err) return res.status(400).send({ message: err.message });
 
@@ -223,6 +243,15 @@ const addProduct = async (req, res) => {
 
 // Update an existing product (admin only)
 const updateProduct = async (req, res) => {
+  const token = req.headers["authorization"];
+  const userIsAdmin = isAdmin(token);
+
+  if (!userIsAdmin) {
+    return res
+      .status(403)
+      .send("You are not authorized to perform this action");
+  }
+
   upload(req, res, async (err) => {
     if (err) return res.status(400).send({ message: err.message });
 
@@ -249,10 +278,9 @@ const updateProduct = async (req, res) => {
   });
 };
 
-
 // Delete a product (admin only)
 const deleteProduct = async (req, res) => {
-    const token = req.headers["authorization"];
+  const token = req.headers["authorization"];
   const userIsAdmin = isAdmin(token);
 
   if (!userIsAdmin) {
