@@ -9,7 +9,7 @@
 
 const express = require("express");
 const router = express.Router();
-const { getCart, addToCart } = require("../controllers/cartControllers");
+const { getCart, addToCart } = require("../controllers/cartController");
 
 // Kullanıcının sepetini getirme
 router.get("/cart/:userId", getCart);
