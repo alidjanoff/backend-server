@@ -3,15 +3,15 @@
 // const products = require("../models/product");
 // const jwt = require("jsonwebtoken");
 
-// // Helper function to check if the user is an admin
-// const isAdmin = (token) => {
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     return decoded.role === "admin"; // Check if the user has 'admin' role
-//   } catch (err) {
-//     return false; // If token is invalid or user is not admin, return false
-//   }
-// };
+// Helper function to check if the user is an admin
+const isAdmin = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded.role === "admin"; // Check if the user has 'admin' role
+  } catch (err) {
+    return false; // If token is invalid or user is not admin, return false
+  }
+};
 
 // // Multer configuration for file uploads
 // const storage = multer.diskStorage({
@@ -249,8 +249,17 @@ const updateProduct = async (req, res) => {
   });
 };
 
+
 // Delete a product (admin only)
 const deleteProduct = async (req, res) => {
+    const token = req.headers["authorization"];
+  const userIsAdmin = isAdmin(token);
+
+  if (!userIsAdmin) {
+    return res
+      .status(403)
+      .send("You are not authorized to perform this action");
+  }
   try {
     await Product.findByIdAndDelete(req.params.id);
     res.send({ message: "Product deleted successfully" });
