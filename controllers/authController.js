@@ -493,6 +493,29 @@ const sendResetPasswordOTP = async (req, res) => {
   }
 };
 
+// Hesap silme OTP gönderme
+const sendDeleteAccountOTP = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send("User not found");
+
+    const otp = otpGenerator.generate(6, {
+      alphabets: false,
+      upperCase: false,
+      specialChars: false,
+    });
+    user.otp = otp;
+    await user.save();
+
+    sendOTPToEmail(email, otp);
+    res.send("OTP sent to email for account deletion");
+  } catch (error) {
+    res.status(500).send("Error sending OTP: " + error.message);
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -501,4 +524,5 @@ module.exports = {
   changePassword,
   sendResetPasswordOTP,
   deleteUserAccount,
+  sendDeleteAccountOTP,
 };
