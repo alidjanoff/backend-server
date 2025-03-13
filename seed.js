@@ -41,67 +41,67 @@ mongoose
 // const products = [
 //   {
 //     id: "1",
-//     name: "Audi R8",
+//     name: "Rounded Red Hat",
 //     details:
-//       "The Audi R8 is a supercar that stands out with its elegant design and superior performance. Equipped with cutting-edge technology features, the Audi R8 takes the driving experience to the next level.",
-//     price: 190000,
-//     productImage: "uploads/audi.png",
+//         "Rounded Red Hat is a stylish and vibrant accessory that adds a touch of elegance and charm to any outfit, perfect for casual or formal occasions.",
+//     price: 8,
+//     productImage: "uploads/redHat.png",
 //   },
 //   {
 //     id: "2",
-//     name: "BMW",
+//     name: "Linen-blend Shirt",
 //     details:
-//       "BMW is a German brand known for its luxurious and sporty cars. BMW models, which are made with high-quality materials and offer powerful engine options, enhance the driving experience.",
+//         "Linen-blend Shirt is a comfortable and lightweight clothing option made from a blend of linen and other materials. Perfect for keeping you cool and stylish in warm weather.",
 //     price: 84000,
-//     productImage: "uploads/bmw.png",
+//     productImage: "uploads/linenBlen.png",
 //   },
 //   {
 //     id: "3",
-//     name: "Chevrolet Camaro",
+//     name: "Long-sleeve Coat",
 //     details:
-//       "The Chevrolet Camaro is a sports car known for its powerful engine and iconic design. It grabs attention with its high performance and impressive appearance.",
+//         "Long-sleeve Coat is a stylish and practical outerwear choice, perfect for chilly weather. Its durable design and comfortable fit make it a great addition to any wardrobe.",
 //     price: 78000,
-//     productImage: "uploads/camaro.png",
+//     productImage: "uploads/longCoat.png",
 //   },
 //   {
 //     id: "4",
-//     name: "Hyundai",
+//     name: "Boxy Denim Hat",
 //     details:
-//       "Hyundai is an automotive brand known for its economical and durable cars. It is preferred for its user-friendly features and affordable prices.",
+//         "Boxy Denim Hat is a trendy and timeless accessory that combines style and functionality, perfect for any casual outing.",
 //     price: 32000,
-//     productImage: "uploads/hundai.png",
+//     productImage: "uploads/boxyDenimHat.png",
 //   },
 //   {
 //     id: "5",
-//     name: "Mercedes Benz",
+//     name: "Linen Plain Top",
 //     details:
-//       "Mercedes Benz is a globally recognized brand known for its luxury and prestigious cars. High quality, comfort, and superior performance are the hallmarks of Mercedes Benz.",
+//         "Linen Plain Top is a simple and elegant wardrobe staple that offers both comfort and style. Made from high-quality linen, it is perfect for both casual and formal occasions.",
 //     price: 92000,
-//     productImage: "uploads/mercedes.png",
+//     productImage: "uploads/plainTop.png",
 //   },
 //   {
 //     id: "6",
-//     name: "Toyota Prado",
+//     name: "Oversized T-shirt",
 //     details:
-//       "Toyota Prado is an SUV model known for its durability, safety, and off-road capabilities. It is suitable for both urban driving and challenging terrain conditions.",
+//         "Oversized T-shirt is a comfortable and loose-fitting clothing item, perfect for casual wear. It provides both style and ease, making it a versatile addition to any wardrobe.",
 //     price: 22000,
-//     productImage: "uploads/prado.png",
+//     productImage: "uploads/oversized.png",
 //   },
 //   {
 //     id: "7",
-//     name: "Toyota Prius",
+//     name: "Polarised Sunglasses",
 //     details:
-//       "Toyota Prius is a compact car that offers an environmentally friendly option with its hybrid engine technology. It stands out with fuel efficiency and low emissions.",
+//         "Polarised Sunglasses are designed to reduce glare and provide clear vision in bright conditions. They are perfect for outdoor activities and offer both style and protection.",
 //     price: 16000,
-//     productImage: "uploads/prius.png",
+//     productImage: "uploads/polariedSunglass.png",
 //   },
 //   {
 //     id: "8",
-//     name: "Volkswagen",
+//     name: "Rockstar Jacket",
 //     details:
-//       "Volkswagen is an automotive brand known for its wide range of models and reliable performance. It stands out with its stylish designs and user-friendly features.",
+//         "Rockstar Jacket is a fashionable and edgy outerwear option that exudes confidence and style, making it a must-have for anyone looking to make a bold statement.",
 //     price: 47000,
-//     productImage: "uploads/wolswagen.png",
+//     productImage: "uploads/rockstarJacket.png",
 //   },
 // ];
 
@@ -110,7 +110,7 @@ const seedDatabase = async () => {
   try {
     // await User.deleteMany(); // Eski kullanıcıları sil
     // await Product.deleteMany(); // Eski ürünleri sil
-
+    //
     // await User.insertMany(users);
     // await Product.insertMany(products);
 
