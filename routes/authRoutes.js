@@ -1,43 +1,3 @@
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   registerUser,
-//   loginUser,
-//   sendOTP,
-//   changeProfileImage,
-//   changePassword,
-//   sendResetPasswordOTP,
-//   deleteUserAccount,
-//   sendDeleteAccountOTP,
-// } = require("../controllers/authController");
-
-// // Kullanıcı kayıt işlemi
-// router.post("/register", registerUser);
-
-// // Kullanıcı giriş işlemi
-// router.post("/login", loginUser);
-
-// // OTP gönderme
-// router.post("/send-otp", sendOTP);
-
-// // Profil resmi değiştirme (auth required)
-// router.put("/users/profile", changeProfileImage);
-
-// // Şifre değiştirme (auth required)
-// router.post("/change-password", changePassword);
-
-// // Şifre sıfırlama işlemi için OTP gönderme
-// router.post("/send-reset-password-otp", sendResetPasswordOTP);
-
-// // Hesap silme işlemi (auth required)
-// router.post("/delete-account", deleteUserAccount);
-
-// // Hesap silme için OTP gönderme
-// router.post("/send-delete-account-otp", sendDeleteAccountOTP);
-
-// module.exports = router;
-
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -45,34 +5,50 @@ const {
   loginUser,
   sendOTP,
   changeProfileImage,
+  getUserProfileData,
+  deactivateUser,
+  confirmUserDeactivation,
+  updateProfileData,
+  getAllUserList,
+  reactivateUser,
+  changeUserRole,
+  confirmUserReactivation,
   changePassword,
   sendResetPasswordOTP,
   deleteUserAccount,
-  sendDeleteAccountOTP
+  sendDeleteAccountOTP,
 } = require("../controllers/authController");
 
-// Kullanıcı kayıt işlemi
 router.post("/register", registerUser);
 
-// Kullanıcı giriş işlemi
 router.post("/login", loginUser);
 
-// OTP gönderme
-router.post("/send-otp", sendOTP);
+router.post("/users/send-otp", sendOTP);
 
-// Profil resmi değiştirme (auth required)
 router.put("/users/profile", changeProfileImage);
 
-// Şifre değiştirme (auth required)
-router.post("/change-password", changePassword);
+router.get("/users/profile-data", getUserProfileData);
 
-// Şifre sıfırlama işlemi için OTP gönderme
-router.post("/send-reset-password-otp", sendResetPasswordOTP);
+router.put("/users/profile-update", updateProfileData);
 
-// Hesap silme işlemi (auth required)
-router.post("/delete-account", deleteUserAccount);
+router.post("/users/deactivate-user", deactivateUser);
 
-// Hesap silme için OTP gönderme
-router.post("/send-delete-account-otp", sendDeleteAccountOTP);
+router.post("/users/deactivate-user-confirm", confirmUserDeactivation);
+
+router.post("/users/change-role", changeUserRole);
+
+router.get("/users/get-all-users", getAllUserList);
+
+router.post("/users/reactivate-user", reactivateUser);
+
+router.post("/users/reactivate-user-confirm", confirmUserReactivation);
+
+router.post("/users/change-password", changePassword);
+
+router.post("/users/send-reset-password-otp", sendResetPasswordOTP);
+
+router.post("/users/delete-account", deleteUserAccount);
+
+router.post("/users/send-delete-account-otp", sendDeleteAccountOTP);
 
 module.exports = router;

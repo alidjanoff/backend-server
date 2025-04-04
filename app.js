@@ -9,12 +9,12 @@ require("dotenv").config();
 
 const connectDB = async () => {
   try {
-    console.log("⏳ Connecting to MongoDB...");
+    console.log("⏳ MongoDB - yə bağlanmağa çalışır...");
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log("✅ MongoDB Connected Successfully");
+    console.log("✅ MongoDB - yə bağlandı");
   } catch (err) {
-    console.error("❌ MongoDB Connection Error:", err);
-    console.error("📌 Check your MONGODB_URI in .env file");
+    console.error("❌ MongoDB bağlantı xətası:", err);
+    console.error("📌 .env faylında olan MONGODB_URI - nin düzgün olduğunu yoxla");
     process.exit(1);
   }
 };
@@ -31,5 +31,5 @@ app.use("/api", cartRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Backend server http://localhost:${PORT} ünvanında başladıldı.\nDeveloper: Tərlan Əlicanov`);
 });

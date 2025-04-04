@@ -6,7 +6,7 @@ Bu API, frontend tələbələrinin praktiki işləri üçün hazırlanmışdır.
 
 ## 🌍 Base URL
 
-https://backend-server-production-de6e.up.railway.app
+http://localhost:8000
 
 ---
 

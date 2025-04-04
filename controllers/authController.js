@@ -1,270 +1,3 @@
-// const bcrypt = require("bcrypt");
-// const jwt = require("jsonwebtoken");
-// const otpGenerator = require("otp-generator");
-// const nodemailer = require("nodemailer");
-// const users = require("../models/user");
-// const { v4: uuidv4 } = require("uuid");
-// const multer = require("multer");
-// const path = require("path");
-// require("dotenv").config();
-
-// // Multer dosya yükleme yapılandırması
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, "uploads/"); // Dosyaların kaydedileceği dizin
-//   },
-//   filename: (req, file, cb) => {
-//     cb(
-//       null,
-//       file.fieldname + "-" + Date.now() + path.extname(file.originalname)
-//     ); // Dosya ismini benzersiz yapıyoruz
-//   },
-// });
-
-// const upload = multer({ storage: storage }).single("profileImage"); // Tek dosya yükleme
-
-// // Kullanıcı kaydı
-// const registerUser = (req, res) => {
-//   const { name, surname, email, password } = req.body;
-//   const hashedPassword = bcrypt.hashSync(password, 10);
-
-//   const newUser = {
-//     id: uuidv4(),
-//     name,
-//     surname,
-//     email,
-//     password: hashedPassword,
-//     profileImage: null,
-//     otp: null,
-//     role: "user", // Varsayılan olarak kullanıcı olarak ekleniyor
-//   };
-
-//   users.push(newUser);
-//   res.send("User is created");
-// };
-
-// // Kullanıcı girişi
-// const loginUser = (req, res) => {
-//   const { email, password } = req.body;
-
-//   const user = users.find((user) => user.email === email);
-//   if (!user || !bcrypt.compareSync(password, user.password)) {
-//     return res.status(401).send("Invalid email or password");
-//   }
-
-//   // Token oluşturulurken role bilgisi de ekleniyor
-//   const token = jwt.sign(
-//     { userId: user.id, role: user.role },
-//     process.env.JWT_SECRET,
-//     { expiresIn: "1w" }
-//   );
-
-//   // Token'ı döndürüyoruz
-//   res.send({ token });
-// };
-
-// // OTP gönderme işlemi
-// const sendOTP = (req, res) => {
-//   const { email } = req.body;
-//   const user = users.find((user) => user.email === email);
-//   if (!user) return res.status(404).send("User not found");
-
-//   const otp = otpGenerator.generate(6, {
-//     alphabets: false,
-//     upperCase: false,
-//     specialChars: false,
-//   });
-//   user.otp = otp;
-//   sendOTPToEmail(email, otp);
-//   res.send("OTP sent to email");
-// };
-
-// // OTP'yi e-posta ile gönderme
-// const sendOTPToEmail = (email, otp) => {
-//   const transporter = nodemailer.createTransport({
-//     service: "gmail",
-//     auth: {
-//       user: process.env.USER_MAIL,
-//       pass: process.env.SECRET_KEY,
-//     },
-//     tls: {
-//       rejectUnauthorized: false,
-//     },
-//   });
-
-//   const mailOptions = {
-//     from: "Test Backend Service",
-//     to: email,
-//     subject: "OTP Verification",
-//     text: `Your OTP is: ${otp}`,
-//   };
-
-//   transporter.sendMail(mailOptions, (error, info) => {
-//     if (error) console.log(error);
-//     else console.log("Email sent: " + info.response);
-//   });
-// };
-
-// // Profil resmini güncelleme
-// const changeProfileImage = (req, res) => {
-//   const token = req.headers.authorization?.split(" ")[1]; // Token'ı header'dan alıyoruz
-
-//   // Token'ı doğruluyoruz
-//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       return res.status(403).send("Invalid token");
-//     }
-
-//     // Kullanıcıyı ID ile buluyoruz
-//     const user = users.find((user) => user.id === decoded.userId);
-//     if (!user) {
-//       return res.status(404).send("User not found");
-//     }
-
-//     // Dosya yükleme işlemi
-//     upload(req, res, (err) => {
-//       if (err) {
-//         return res.status(400).send("Error uploading file: " + err.message);
-//       }
-
-//       // Dosya yüklendiyse, profil resmini güncelliyoruz
-//       user.profileImage = req.file.path; // Burada file path'ini kullanıcı profil resmine atıyoruz
-
-//       // Kullanıcıyı güncel profil resmiyle beraber yanıtlıyoruz
-//       res.send({
-//         message: "Profile image updated successfully",
-//         profileImage: user.profileImage, // Yeni profil resmini döndürüyoruz
-//       });
-//     });
-//   });
-// };
-
-// // Şifre değiştirme
-// const changePassword = (req, res) => {
-//   const { oldPassword, newPassword, email, otp } = req.body;
-//   const token = req.headers.authorization;
-//   if (token) {
-//     // Kullanıcı giriş yapmışsa (JWT var)
-//     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//       if (err) {
-//         return res.status(403).send("Invalid token");
-//       }
-
-//       const user = users.find((user) => user.id === decoded.userId);
-//       if (!user) {
-//         return res.status(404).send("User not found");
-//       }
-
-//       // Eski şifreyi kontrol et
-//       if (!bcrypt.compareSync(oldPassword, user.password)) {
-//         return res.status(401).send("Old password is incorrect");
-//       }
-
-//       // Yeni şifreyi güncelle
-//       user.password = bcrypt.hashSync(newPassword, 10);
-//       res.send("Password has been successfully changed");
-//     });
-//   } else if (email && otp) {
-//     // Kullanıcı giriş yapmamışsa (Şifreyi unuttuysa)
-//     const user = users.find((user) => user.email === email);
-//     if (!user) {
-//       return res.status(404).send("User not found");
-//     }
-
-//     if (user.otp !== otp) {
-//       return res.status(401).send("Invalid OTP");
-//     }
-
-//     // Yeni şifreyi güncelle
-//     user.password = bcrypt.hashSync(newPassword, 10);
-
-//     // OTP'yi sil
-//     user.otp = null;
-//     res.send("Password has been successfully changed");
-//   } else {
-//     return res.status(400).send("Invalid request data");
-//   }
-// };
-
-// // Şifre sıfırlama işlemi için OTP gönderme
-// const sendResetPasswordOTP = (req, res) => {
-//   const { email } = req.body;
-//   console.log(email);
-//   const user = users.find((user) => user.email === email);
-//   console.log(user);
-//   if (!user) {
-//     return res.status(404).send("User not found");
-//   }
-
-//   const otp = otpGenerator.generate(6, {
-//     alphabets: false,
-//     upperCase: false,
-//     specialChars: false,
-//   });
-//   user.otp = otp;
-//   sendOTPToEmail(email, otp);
-//   res.send("OTP sent to email for password reset");
-// };
-
-// // Hesap silme işlemi
-// const deleteUserAccount = (req, res) => {
-//   const { otp } = req.body;
-
-//   const token = req.headers.authorization;
-
-//   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       return res.status(403).send("Invalid token");
-//     }
-
-//     const user = users.find((user) => user.id === decoded.userId);
-//     if (!user) {
-//       return res.status(404).send("User not found");
-//     }
-
-//     if (user.otp !== otp) {
-//       return res.status(401).send("Invalid OTP");
-//     }
-
-//     const userIndex = users.indexOf(user);
-//     if (userIndex > -1) {
-//       users.splice(userIndex, 1);
-//     }
-
-//     res.send("User account has been successfully deleted");
-//   });
-// };
-
-// // Hesap silme için OTP gönderme
-// const sendDeleteAccountOTP = (req, res) => {
-//   const { email } = req.body;
-
-//   const user = users.find((user) => user.email === email);
-//   if (!user) {
-//     return res.status(404).send("User not found");
-//   }
-
-//   const otp = otpGenerator.generate(6, {
-//     alphabets: false,
-//     upperCase: false,
-//     specialChars: false,
-//   });
-//   user.otp = otp;
-//   sendOTPToEmail(email, otp);
-//   res.send("OTP sent to email for account deletion");
-// };
-
-// module.exports = {
-//   registerUser,
-//   loginUser,
-//   sendOTP,
-//   changeProfileImage,
-//   changePassword,
-//   sendResetPasswordOTP,
-//   deleteUserAccount,
-//   sendDeleteAccountOTP,
-// };
-
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
@@ -274,7 +7,6 @@ const multer = require("multer");
 const path = require("path");
 require("dotenv").config();
 
-// Multer dosya yükleme yapılandırması
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -289,10 +21,18 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage }).single("profileImage");
 
-// Kullanıcı kaydı
 const registerUser = async (req, res) => {
   const { name, surname, email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10);
+
+  if (name.trim() === "")
+    return res.status(400).send("Ad yazmağınız tələb olunur");
+  if (surname.trim() === "")
+    return res.status(400).send("Soyad yazmağınız tələb olunur");
+  if (email.trim() === "")
+    return res.status(400).send("Email yazmağınız tələb olunur");
+  if (password.trim() === "")
+    return res.status(400).send("Şifrə yazmağınız tələb olunur");
 
   try {
     const newUser = new User({
@@ -303,20 +43,26 @@ const registerUser = async (req, res) => {
       role: "user",
     });
     await newUser.save();
-    res.send("User is created");
+    res.send("İstifadəçi qeydiyyatı tamamlandı.");
   } catch (error) {
-    res.status(500).send("Error creating user: " + error.message);
+    res.status(500).send("Xəta registerUser: " + error.message);
   }
 };
 
-// Kullanıcı girişi
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
     const user = await User.findOne({ email });
     if (!user || !bcrypt.compareSync(password, user.password)) {
-      return res.status(401).send("Invalid email or password");
+      return res.status(401).send("Yalnış email və ya şifrə");
+    }
+    if (!user.isActive) {
+      return res
+        .status(401)
+        .send(
+          "İstifadəçi profili aktiv deyil. Zəhmət olmasa yenidən aktivləşdirin."
+        );
     }
 
     const token = jwt.sign(
@@ -326,17 +72,16 @@ const loginUser = async (req, res) => {
     );
     res.send({ token });
   } catch (error) {
-    res.status(500).send("Error logging in: " + error.message);
+    res.status(500).send("Xəta loginUser: " + error.message);
   }
 };
 
-// OTP gönderme işlemi
 const sendOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı");
 
     const otp = otpGenerator.generate(6, {
       alphabets: false,
@@ -347,13 +92,12 @@ const sendOTP = async (req, res) => {
     await user.save();
 
     sendOTPToEmail(email, otp);
-    res.send("OTP sent to email");
+    res.send(`OTP kodu ${email} elektron poçtuna göndərildi.`);
   } catch (error) {
-    res.status(500).send("Error sending OTP: " + error.message);
+    res.status(500).send("Xəta sendOTP: " + error.message);
   }
 };
 
-// OTP'yi e-posta ile gönderme
 const sendOTPToEmail = (email, otp) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -367,10 +111,10 @@ const sendOTPToEmail = (email, otp) => {
   });
 
   const mailOptions = {
-    from: "Test Backend Service",
+    from: "Backend Service",
     to: email,
-    subject: "OTP Verification",
-    text: `Your OTP is: ${otp}`,
+    subject: "OTP Code",
+    text: `Sizin OTP kodunuz: ${otp}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
@@ -379,35 +123,131 @@ const sendOTPToEmail = (email, otp) => {
   });
 };
 
-// Profil resmini güncelleme
 const changeProfileImage = async (req, res) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  const token = req.headers.authorization;
 
-  if (!token) return res.status(403).send("No token provided");
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
     upload(req, res, async (err) => {
-      if (err)
-        return res.status(400).send("Error uploading file: " + err.message);
+      if (err) return res.status(400).send("Şəkil yüklənmədi: " + err.message);
 
       user.profileImage = req.file.path;
       await user.save();
 
       res.send({
-        message: "Profile image updated successfully",
+        message: "Profile şəkli uğurla dəyişdirildi",
         profileImage: user.profileImage,
       });
     });
   } catch (error) {
-    res.status(500).send("Error updating profile image: " + error.message);
+    res.status(500).send("Xəta changeProfileImage: " + error.message);
   }
 };
 
-// Şifre değiştirme
+const getUserProfileData = async (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+
+    res.send({
+      _id: user._id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      profileImage: user.profileImage,
+      role: user.role,
+      phone: user.phone,
+      address: user.address,
+      age: user.age,
+      registerDate: user.registerDate,
+      isActive: user.isActive,
+    });
+  } catch (error) {
+    res.status(500).send("Xəta" + error.message);
+  }
+};
+
+const updateProfileData = async (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+    if (!user.isActive)
+      return res
+        .status(400)
+        .send("İstifadəçi aktiv deyil. Zəhmət olmasa yenidən aktivləşdirin.");
+
+    user.email = req.body.email || user.email;
+    user.phone = req.body.phone || user.phone;
+    user.address = req.body.address || user.address;
+    user.age = req.body.age || user.age;
+    await user.save();
+
+    res.send({
+      message: "İstifadəçi məlumatları uğurla yeniləndi.",
+      data: {
+        _id: user._id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        profileImage: user.profileImage,
+        role: user.role,
+        phone: user.phone,
+        address: user.address,
+        age: user.age,
+        registerDate: user.registerDate,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    res.status(500).send("Xəta: " + error.message);
+  }
+};
+
+const changeUserRole = async (req, res) => {
+  const token = req.headers.authorization;
+  const { user_id, role } = req.body;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const admin = await User.findById(decoded.userId);
+    const user = await User.findById(user_id);
+    if (!admin) return res.status(404).send("İstifadəçi tapılmadı.");
+    if (admin.role !== "admin")
+      return res.status(404).send("Sizin bu əməliyyat üçün icazəniz yoxdur.");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+
+    user.role = role;
+    await user.save();
+
+    res.send({
+      message: `${user.name} ${
+        user.surname
+      } adlı istifadəçinin rolu dəyişdirildi. İstifadəçi artıq ${
+        user.role === "admin" ? "Admindir" : "Admin deyil"
+      }`,
+    });
+  } catch (error) {
+    res.status(500).send("Xəta: " + error.message);
+  }
+};
+
 const changePassword = async (req, res) => {
   const { oldPassword, newPassword, email, otp } = req.body;
   const token = req.headers.authorization;
@@ -416,67 +256,65 @@ const changePassword = async (req, res) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await User.findById(decoded.userId);
-      if (!user) return res.status(404).send("User not found");
+      if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
       if (!bcrypt.compareSync(oldPassword, user.password)) {
-        return res.status(401).send("Old password is incorrect");
+        return res.status(401).send("Əvvəlki şifrə yalnışdır.");
       }
 
       user.password = bcrypt.hashSync(newPassword, 10);
       await user.save();
-      res.send("Password has been successfully changed");
+      res.send("Şifrə uğurla dəyişdirildi");
     } catch (error) {
-      res.status(500).send("Error changing password: " + error.message);
+      res.status(500).send("Xəta changePassword: " + error.message);
     }
   } else if (email && otp) {
     try {
       const user = await User.findOne({ email });
-      if (!user) return res.status(404).send("User not found");
+      if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
-      if (user.otp !== otp) return res.status(401).send("Invalid OTP");
+      if (user.otp !== otp) return res.status(401).send("OTP kodu yalnışdır");
 
       user.password = bcrypt.hashSync(newPassword, 10);
       user.otp = null;
       await user.save();
 
-      res.send("Password has been successfully changed");
+      res.send("Şifrə uğurla dəyişdirildi");
     } catch (error) {
-      res.status(500).send("Error changing password: " + error.message);
+      res.status(500).send("Xəta: " + error.message);
     }
   } else {
-    res.status(400).send("Invalid request data");
+    res.status(400).send("Xəta: changePassword" + error.message);
   }
 };
 
-// Hesap silme işlemi
 const deleteUserAccount = async (req, res) => {
   const { otp } = req.body;
   const token = req.headers.authorization;
 
-  if (!token) return res.status(403).send("No token provided");
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.userId);
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
-    if (user.otp !== otp) return res.status(401).send("Invalid OTP");
+    if (user.otp !== otp) return res.status(401).send("OTP kodu yalnışdır.");
 
     await User.findByIdAndDelete(user._id);
 
-    res.send("User account has been successfully deleted");
+    res.send("İstifadəçi uğurla silindi.");
   } catch (error) {
-    res.status(500).send("Error deleting account: " + error.message);
+    res.status(500).send("Xəta: deleteUserAccount" + error.message);
   }
 };
 
-// Şifre sıfırlama OTP gönderme
 const sendResetPasswordOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
     const otp = otpGenerator.generate(6, {
       alphabets: false,
@@ -487,19 +325,114 @@ const sendResetPasswordOTP = async (req, res) => {
     await user.save();
 
     sendOTPToEmail(email, otp);
-    res.send("OTP sent to email for password reset");
+    res.send(`OTP kodu ${email} elektron poçtuna göndərildi.`);
   } catch (error) {
-    res.status(500).send("Error sending OTP: " + error.message);
+    res.status(500).send("Xəta: sendRequestPasswordOTP " + error.message);
   }
 };
 
-// Hesap silme OTP gönderme
+const deactivateUser = async (req, res) => {
+  const { email } = req.body;
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+    if (
+      String(user.email).toLocaleLowerCase() !==
+      String(email).toLocaleLowerCase()
+    )
+      return res.status(404).send("Elektron poçt düzgün deyil");
+
+    const otp = otpGenerator.generate(6, {
+      alphabets: false,
+      upperCase: false,
+      specialChars: false,
+    });
+    user.otp = otp;
+    await user.save();
+
+    sendOTPToEmail(email, otp);
+    res.send(`OTP kodu ${email} elektron poçtuna göndərildi.`);
+  } catch (error) {
+    res.status(500).send("Xəta: deactivateUser" + error.message);
+  }
+};
+
+const confirmUserDeactivation = async (req, res) => {
+  const { otp } = req.body;
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+
+    if (user.otp !== otp) return res.status(401).send("OTP kodu yalnışdır");
+
+    user.isActive = false;
+    user.otp = null;
+    await user.save();
+
+    res.send("İstifadəçi profili deaktiv edildi");
+  } catch (error) {
+    res.status(500).send("Xəta: confirmUserDeactivation" + error.message);
+  }
+};
+
+const reactivateUser = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+    if (user.isActive) return res.status(400).send("İstifadəçi artıq aktivdir");
+
+    const otp = otpGenerator.generate(6, {
+      alphabets: false,
+      upperCase: false,
+      specialChars: false,
+    });
+    user.otp = otp;
+    await user.save();
+
+    sendOTPToEmail(email, otp);
+    res.send(`OTP kodu ${email} elektron poçtuna göndərildi.`);
+  } catch (error) {
+    res.status(500).send("Xəta: reactivateUser" + error.message);
+  }
+};
+
+const confirmUserReactivation = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
+
+    if (user.otp !== otp) return res.status(401).send("OTP kodu yalnışdır");
+
+    user.isActive = true;
+    user.otp = null;
+    await user.save();
+
+    res.send("İstifadəçi aktivləşdirildi. Zəhmət olmasa hesabınıza daxil olun.");
+  } catch (error) {
+    res.status(500).send("Xəta: confirmUserReactivation" + error.message);
+  }
+};
+
 const sendDeleteAccountOTP = async (req, res) => {
   const { email } = req.body;
 
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(404).send("User not found");
+    if (!user) return res.status(404).send("İstifadəçi tapılmadı.");
 
     const otp = otpGenerator.generate(6, {
       alphabets: false,
@@ -510,9 +443,42 @@ const sendDeleteAccountOTP = async (req, res) => {
     await user.save();
 
     sendOTPToEmail(email, otp);
-    res.send("OTP sent to email for account deletion");
+    res.send(`OTP kodu ${email} elektron poçtuna göndərildi.`);
   } catch (error) {
-    res.status(500).send("Error sending OTP: " + error.message);
+    res.status(500).send("Xəta: sendDeleteAccountOTP" + error.message);
+  }
+};
+
+const getAllUserList = async (req, res) => {
+  const token = req.headers.authorization;
+
+  if (!token) return res.status(403).send("Sorğu məlumatları yalnışdır");
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const currentUser = await User.findById(decoded.userId);
+
+    if (!currentUser || currentUser.role !== "admin") {
+      return res.status(403).send("Sizin bu əməliyyat üçün icazəniz yoxdur.");
+    }
+
+    const users = await User.find();
+    const data = users.map((item) => ({
+      _id: item._id,
+      name: item.name,
+      surname: item.surname,
+      email: item.email,
+      profileImage: item.profileImage,
+      role: item.role,
+      phone: item.phone,
+      address: item.address,
+      age: item.age,
+      registerDate: item.registerDate,
+      isActive: item.isActive,
+    }));
+    res.send(data);
+  } catch (error) {
+    res.status(500).send("Xəta: getAllUserList" + error.message);
   }
 };
 
@@ -521,6 +487,14 @@ module.exports = {
   loginUser,
   sendOTP,
   changeProfileImage,
+  getUserProfileData,
+  updateProfileData,
+  confirmUserDeactivation,
+  reactivateUser,
+  confirmUserReactivation,
+  changeUserRole,
+  deactivateUser,
+  getAllUserList,
   changePassword,
   sendResetPasswordOTP,
   deleteUserAccount,
